@@ -1,4 +1,4 @@
-<img align="left" src="https://github.com/mattpidden/mattpidden/blob/main/Animation%20-%201707251274568.gif?raw=true" width="30%" style="display:inline;"><img align="right" src="https://github.com/mattpidden/mattpidden/blob/main/Animation%20-%201707251274568.gif?raw=true" width="30%" style="display:inline;">
+<img align="left" src="https://github.com/mattpidden/mattpidden/blob/main/bluecorfetti.gif?raw=true" width="30%" style="display:inline;"><img align="right" src="https://github.com/mattpidden/mattpidden/blob/main/bluecorfetti.gif?raw=true" width="30%" style="display:inline;">
 <br>
 <p align="center">
     <h1 align="center">★&emsp;mattpidden&emsp;★</h1>
