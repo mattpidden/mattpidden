@@ -8,7 +8,7 @@
 </p>
 <br>
 <p align="center">
-    <a href="https://leetcode.com/drknzz/"><img width="44.3%" src="https://github-readme-stats.vercel.app/api?username=mattpidden&show_icons=true&theme=transparent"></a>
+    <a href="https://leetcode.com/drknzz/"><img width="52.3%" src="https://github-readme-stats.vercel.app/api?username=mattpidden&show_icons=true&theme=transparent"></a>
     <a href="https://github.com/mattpidden"><img width="40%" src="https://github-readme-stats.vercel.app/api/top-langs/?username=mattpidden&theme=transparent&layout=compact"></a>
 
 </p>
