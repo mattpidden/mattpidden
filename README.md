@@ -4,11 +4,10 @@
     <h1 align="center">★&emsp;mattpidden&emsp;★</h1>
 </p>
 <p align="center">
-    <img src="https://readme-typing-svg.herokuapp.com/?lines=Hello+There;Welcome+To+My+Profile!;Take+A+Look+Around!&font=Fira%20Code&color=%335da1&center=true&width=280&height=50">
+    <img src="https://readme-typing-svg.herokuapp.com/?lines=Greetings+Stranger;Welcome+To+My+GitHub!;Take+A+Look+Around!;View+My+Portfolio;&font=Fira%20Code&color=%185BCA&center=true&width=280&height=50">
 </p>
 <br>
 <p align="center">
-    <a href="https://leetcode.com/drknzz/"><img width="52.3%" src="https://github-readme-stats.vercel.app/api?username=mattpidden&show_icons=true&theme=transparent"></a>
     <a href="https://github.com/mattpidden"><img width="40%" src="https://github-readme-stats.vercel.app/api/top-langs/?username=mattpidden&theme=transparent&layout=compact"></a>
 
 </p>
