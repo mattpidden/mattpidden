@@ -1,12 +1,10 @@
-<img align="left" src="https://github.com/mattpidden/mattpidden/blob/main/bluecorfetti.gif?raw=true" width="30%" style="display:inline;">
-
-<img align="right" src="https://github.com/mattpidden/mattpidden/blob/main/bluecorfetti.gif?raw=true" width="30%" style="display:inline;">
-
-<br>
-<br>
-<br>
+<img align="left" src="https://github.com/mattpidden/mattpidden/blob/main/orangegreencorfetti.gif?raw=true" width="30%" style="display:inline;">
+<img align="right" src="https://github.com/mattpidden/mattpidden/blob/main/orangegreencorfetti.gif?raw=true" width="30%" style="display:inline;">
 
 <p align="center">
+   <br>
+   <br>
+   <br>
    <img align="center" src="https://readme-typing-svg.herokuapp.com?font=Roboto+Condensed&weight=800&size=25&duration=2000&pause=5000&color=FF863F&background=46BE34&center=true&vCenter=true&random=false&width=435&lines=MATT+PIDDEN;%40mattpidden" width="40%" style="display:inline;">
 </p>
 
