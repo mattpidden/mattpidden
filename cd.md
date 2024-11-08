@@ -29,7 +29,11 @@ If you are setting up the workflow for iOS distribution, you will need to use a 
 In this example we take a look at building an iOS app, and deploying via Apple App Store. The `yaml` examples have a lot of comments, `echo` and `ls` commands in order to maintain readability, and for easy debugging.
 
 To build and deploy an iOS app you need signing certificates, profiles, keychain passwords, API keys and an `exportOptions.plist` file.
-We use GitHub Secrets to store these confidential values securely. For more details on how to get, encode, and upload all of these, see [Setting up GitHub Secrets etc](#setting-up-github-secrets-etc)
+We use GitHub Secrets to store these confidential values securely. For more details on how to get, encode, and upload all of these, see [GitHub Secrets for iOS Deployment](#github-secrets-for-ios-deployment)
+
+If this is confusing you, take a look at [this](https://www.andrewhoog.com/post/how-to-build-an-ios-app-with-github-actions-2023/) great article.
+
+
 1. Start the CD pipeline with a designated trigger, often a pull request merge to the main branch.
 ```yaml
 on:
