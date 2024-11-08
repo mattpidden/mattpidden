@@ -240,10 +240,13 @@ The `exportOptions.plist` file is a configuration file used by Xcode during the 
 <br></br>
 ## Deploy to Android via Google Play Store CD Workflow
 In this example we take a look at building an Android app, and deploying via Google Play Store. The `yaml` examples have a lot of comments, `echo` and `ls` commands in order to maintain readability, and for easy debugging.
-The examples below are for Kotlin and Java projects. If using Flutter or React Native, you will need to use some of the examples from the iOS examples.
+The examples below are for Kotlin and Java projects. If using Flutter or React Native, you will need to use some of the code from the iOS examples.
 
-To build and deploy an Android app you need signing certificates, profiles, keychain passwords, API keys and an `exportOptions.plist` file.
-We use GitHub Secrets to store these confidential values securely. For more details on how to get, encode, and upload all of these, see [Setting up GitHub Secrets etc](#setting-up-github-secrets-etc)
+To build and deploy an Android app, you need signing keys, JSON service account credentials, and environment variables. We use GitHub Secrets to securely store these confidential values. For more details on how to get, encode, and upload all of these, see [GitHub Secrets for Android Deployment](#github-secrets-for-android-deployment)
+
+If this is confusing you, take a look at [this](https://medium.com/lodgify-technology-blog/deploy-your-flutter-app-to-google-play-with-github-actions-f13a11c4492e) great article.
+
+
 1. Start the CD pipeline with a designated trigger, often a pull request merge to the main branch.
 ```yaml
 on:
@@ -266,136 +269,71 @@ runs-on: ubuntu-latest
 - name: Set up JDK
   uses: actions/setup-java@v3
   with:
+    distribution: 'zulu'
     java-version: '11'        
     cache: 'gradle'              
 - name: Install Dependencies
   run: ./gradlew build -x test 
 ```
 
-5. Load all required app signing certificates, keys, and provisioning profiles to authorize the app build for the selected platform
+5. Load all required app signing keys and credentials to authorize the app build for the selected platform
 ```yaml
-- name: Import Certificates and Provisioning Profiles
-  # This env section fetches values from GitHub secrets and saves them to variables
+- name: Setup Google Play credentials
   env:
-    BUILD_CERTIFICATE_BASE64: ${{ secrets.iOS_P12_DISTRIBUTION_CERT_BASE64 }} 
-    P12_PASSWORD: ${{ secrets.iOS_P12_DISTRIBUTION_CERT_PASSWORD }}     
-    BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.iOS_PROVISION_PROFILE_BASE64 }}       
-    KEYCHAIN_PASSWORD: ${{ secrets.iOS_KEYCHAIN_PASSWORD }}
-  run: |   
-    echo "Certificate Base64 length: ${#BUILD_CERTIFICATE_BASE64}"
-    echo "Prov ision Profile Base64 length: ${#BUILD_PROVISION_PROFILE_BASE64}"
-
-    # Set paths for certificate and profile files
-    CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12                
-    PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
-    KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-
-    # Decode and save certificates and provisioning profiles from secrets
-    echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
-    echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
-
-    ls -l $CERTIFICATE_PATH
-    ls -l $PP_PATH
-    
-    file $CERTIFICATE_PATH
-    file $PP_PATH
-
-    # Create and unlock a keychain to store the certificate
-    security create-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN_PATH
-    security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-    security unlock-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN_PATH
-
-    ls -l $KEYCHAIN_PATH
-    security show-keychain-info $KEYCHAIN_PATH
-
-    # Import certificate into the keychain
-    security import $CERTIFICATE_PATH -P $P12_PASSWORD -A -t cert -f pkcs12 -k $KEYCHAIN_PATH            
-    security list-keychains -d user -s $KEYCHAIN_PATH
-
-    # Move the mobile provisioning profile to the correct folder
-    mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-    cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
-    ls -l ~/Library/MobileDevice/Provisioning\ Profiles
-```
-6. Retrieve API keys or access tokens required to communicate with the target App Store
-```yaml
-- name: Decode App Store Connect private key file and save it
-  # This env section fetches values from GitHub secrets and saves them to variables
-  env:
-    API_KEY_BASE64: ${{ secrets.iOS_APPSTORE_CONNECT_PRIVATE_KEY_BASE64 }}
-    API_KEY: ${{ secrets.iOS_APPSTORE_CONNECT_API_KEY_ID }}     
+    SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
   run: |
-    # Create directory for private key storage
-    mkdir -p ~/private_keys
-    # Decode and save key
-    echo -n "$API_KEY_BASE64" | base64 --decode -o ~/private_keys/AuthKey_$API_KEY.p8
-
+    echo "$SERVICE_ACCOUNT_JSON" > $HOME/google_play_service_account.json
+    echo "Service account key setup complete"
+```
+6. Retrieve signing keys required to sign the APK/AAB for release
+```yaml
+- name: Setup Signing Key
+  env:
+    ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+    KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+    KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+    KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+  run: |
+    # Decode and save the keystore file
+    echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > $HOME/release-key.jks
+    echo "Keystore setup complete"
 ```
 7. Compile the app for the target platform
 ```yaml
-# FOR A FLUTTER APP
-- name: Build iOS application archive
-  run: |
-    # Compile Flutter app into .ipa file
-    flutter build ipa --release --export-options-plist=ios/exportOptions.plist
+# FOR A KOTLIN OR JAVA APP
+- name: Build APK
+  run: ./gradlew assembleRelease
 ```
+8. Upload the compiled build to Google Play using the Google Play Publisher API
 ```yaml
-# FOR A REACT NATIVE APP
-- name: Build iOS application archive
-  run: |
-    # Navigate to the iOS directory and install dependencies
-    cd ios && pod install && cd ..
-
-    # Build and archive the app in one step
-    xcodebuild -workspace ios/YourApp.xcworkspace \
-               -scheme YourAppScheme \
-               -sdk iphoneos \
-               -configuration Release \
-               -archivePath ${{ github.workspace }}/build/YourApp.xcarchive archive
-
-    # Export the .ipa
-    xcodebuild -exportArchive \
-               -archivePath ${{ github.workspace }}/build/YourApp.xcarchive \
-               -exportOptionsPlist ios/exportOptions.plist \
-               -exportPath ${{ github.workspace }}/build/ios/ipa
-```
-```yaml
-# FOR A SWIFT APP
-- name: Build iOS application archive
-  run: |
-    # Build and archive the app in one step
-    xcodebuild -project YourApp.xcodeproj \
-               -scheme YourAppScheme \
-               -sdk iphoneos \
-               -configuration Release \
-               -archivePath ${{ github.workspace }}/build/YourApp.xcarchive archive
-
-    # Export the .ipa
-    xcodebuild -exportArchive \
-               -archivePath ${{ github.workspace }}/build/YourApp.xcarchive \
-               -exportOptionsPlist exportOptions.plist \
-               -exportPath ${{ github.workspace }}/build/ios/ipa
-```
-8. Upload the compiled build to the target App Store.
-```yaml
-- name: Upload to App Store Connect
-  # This env section fetches values from GitHub secrets and saves them to variables
-  env:
-    ISSUER_ID: ${{ secrets.IOS_APPSTORE_CONNECT_ISSUER_ID }}          
-    API_KEY: ${{ secrets.IOS_APPSTORE_CONNECT_API_KEY_ID }}     
-  run: |
-      # Upload the .ipa file using the App Store Connect API key and issuer ID
-      xcrun altool --upload-app -f build/ios/ipa/*.ipa -t ios --apiKey $API_KEY --apiIssuer "$ISSUER_ID"
+- name: Upload to Google Play
+  uses: r0adkll/upload-google-play@v1
+  with:
+    serviceAccountJsonPath: $HOME/google_play_service_account.json
+    # Replace the below with your apps bundle id
+    packageName: com.example.bundleId
+    releaseFile: app/build/outputs/apk/release/app-release.apk
+    track: production
+    inAppUpdatePriority: 3
+    status: completed
 ```
 9. Remove any sensitive data, temporary files, and credentials from the CD environment to maintain security.
 ```yaml
 - name: Clean up keychain and provisioning profile
-      if: ${{ always() }}
+    if: ${{ always() }}
       run: |
-        # Delete the keychain and remove the provisioning profile after upload
-        security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
-        rm ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision
+        rm -f $HOME/google_play_service_account.json
+        rm -f $HOME/release-key.jks
+        echo "Clean up complete"
 ```
 
 <br></br>
 ### GitHub Secrets for Android Deployment
+| GitHub Secret |	Description	| How To |
+| ------------- | ----------- | ------ |
+| `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | This is the Google Play Service Account key in JSON format. It allows GitHub Actions to authenticate with Google Play for app upload. |	Go to Google Cloud Console, create a new service account, and grant it the "Release Manager" role for Google Play Console. Then, go to Keys for the service account and create a JSON key. Save the JSON key and encode it in Base64 if needed. Store this JSON file’s content as a GitHub Secret. |
+| `ANDROID_KEYSTORE_BASE64` |	This is the keystore file in Base64 format, used for signing the Android app for release. |	Convert your release-key.jks file to Base64. Copy the Base64-encoded contents and set it as `ANDROID_KEYSTORE_BASE64`. |
+| `ANDROID_KEYSTORE_PASSWORD` |	The password for the keystore file, which protects the private key within the keystore. |	This password was set when you created the keystore file. |
+| `ANDROID_KEY_ALIAS` |	The alias for the key within the keystore that will be used for signing. |	This alias was set when you created the keystore file. |
+| `ANDROID_KEY_PASSWORD` |	The password for the key alias, used to access the private key within the keystore. |	This password was set when you created the keystore file. |
+
