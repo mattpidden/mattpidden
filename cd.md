@@ -1,5 +1,16 @@
 ## Mobile App Continuous Deployment to App Stores
 Continuous Deployment (CD) for mobile apps streamlines the process of building, testing, and deploying applications directly to app stores like the Apple App Store and Google Play Store. CD is valuable across all mobile development frameworks, including Swift, Flutter, Java, Kotlin, and React Native.
+
+- [Mobile App Continuous Deployment to App Stores](#mobile-app-continuous-deployment-to-app-stores)
+  - [Benifits of CD for Mobile Apps](#benifits-of-cd-for-mobile-apps)
+  - [General Steps of Mobile App Deployment](#general-steps-of-mobile-app-deployment)
+  - [Prerequisites](#prerequisites)
+- [Deploy to iOS via Apple App Store CD Workflow](#deploy-to-ios-via-apple-app-store-cd-workflow)
+  - [GitHub Secrets for iOS Deployment](#github-secrets-for-ios-deployment)
+    - [Create exportOptions.plist](#create-exportoptionsplist)
+- [Deploy to Android via Google Play Store CD Workflow](#deploy-to-android-via-google-play-store-cd-workflow)
+  - [GitHub Secrets for Android Deployment](#github-secrets-for-android-deployment)
+
 ### Benifits of CD for Mobile Apps
 - The ability to build an iOS app, without needing to own a Mac
 - Quicker, easier, more reliable than building and deploying manually
@@ -12,7 +23,8 @@ Before you can start creating CD workflows, you will need a developer account fo
 
 If you are setting up the workflow for iOS distribution, you will need to use a Mac when sourcing some of the GitHub Secrets
 
-
+<br></br>
+<br></br>
 ## Deploy to iOS via Apple App Store CD Workflow
 In this example we take a look at building an iOS app, and deploying via Apple App Store. The `yaml` examples have a lot of comments, `echo` and `ls` commands in order to maintain readability, and for easy debugging.
 
@@ -186,7 +198,42 @@ runs-on: macos-latest
         security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
         rm ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision
 ```
+<br></br>
+### GitHub Secrets for iOS Deployment
+| GitHub Secret | Description | How To |
+| :------------ | :---------- | :----- |
+| `IOS_APPSTORE_CONNECT_API_KEY_ID` | This is the App Store Connect API Key ID, which is used to authenticate API requests to App Store Connect. It’s needed for uploading your `.ipa` file to App Store Connect. | Log in to App Store Connect. Go to Users and Access > Integrations > App Store Connect API. If you don’t have an API key yet, create one by clicking the `+` button. Copy the Key ID provided – this is your `IOS_APPSTORE_CONNECT_API_KEY_ID`. |
+| `IOS_APPSTORE_CONNECT_ISSUER_ID` | The Issuer ID is a unique identifier for your App Store Connect organization, necessary for authenticating API requests along with the API Key ID. | In App Store Connect, go to Users and Access > Integrations > App Store Connect API. The Issuer ID is listed at the top. |
+| `IOS_APPSTORE_CONNECT_PRIVATE_KEY_BASE64` | This is your App Store Connect API Private Key in Base64 format. It’s used with the Key ID and Issuer ID to securely authenticate uploads to App Store Connect. | When creating an API key in App Store Connect (as described above), download the `.p8` file – this file is your private key. Important: Do not share or expose this key publicly. Store it securely. Encode this key in Base64 (required for GitHub Actions). You can encode it via various commands depending on your OS. Copy the Base64-encoded contents and set it as the value for `IOS_APPSTORE_CONNECT_PRIVATE_KEY_BASE64`. |
+| `IOS_KEYCHAIN_PASSWORD` | This is a password for the temporary keychain created in GitHub Actions to store your code-signing certificates and keys during the build process. This password can be any strong, random string and is used to secure the keychain on the runner. | Pick a strong password, it can be any string. |
+| `IOS_P12_DISTRIBUTION_CERT_BASE64` | This is your iOS Distribution Certificate in Base64 format, needed to sign the app for App Store distribution. | Open Keychain Access on your Mac. Locate your iOS Distribution Certificate (issued by Apple). Export the certificate and private key as a `.p12` file by right-click the certificate and choose Export. Save it as a `.p12` file with a password (you’ll use this password for `IOS_P12_DISTRIBUTION_CERT_PASSWORD`). Convert the `.p12` file to Base64 for GitHub Actions. Copy the Base64-encoded contents and set it as `IOS_P12_DISTRIBUTION_CERT_BASE64`. |
+| `IOS_P12_DISTRIBUTION_CERT_PASSWORD` | The password used when exporting your .p12 distribution certificate. This allows the certificate to be imported into the GitHub Actions keychain. | When you exported your certificate from Keychain Access, you created this password. |
+| `IOS_PROVISION_PROFILE_BASE64` | This is your iOS Provisioning Profile in Base64 format, which matches your app’s bundle identifier and distribution certificate for App Store distribution. | On the [Apple Developer website](developer.apple.com), go to Account > Certificates, Identifiers & Profiles > Profiles. Download the appropriate Provisioning Profile for App Store distribution (must match the app’s bundle ID). Convert the `.mobileprovision` file to Base64. Copy the Base64-encoded contents and set it as `IOS_PROVISION_PROFILE_BASE64`. |
 
+<br></br>
+#### Create exportOptions.plist
+The `exportOptions.plist` file is a configuration file used by Xcode during the export phase of building an iOS app to specify settings like the distribution method (e.g., App Store, Ad Hoc, Development), team ID, and provisioning profiles. We need this file in order to define how Xcode should sign and package the app for deployment or distribution, ensuring that it meets Apple's requirements. To customize it, you’ll need to change values such as the `method` (e.g., `app-store` for App Store release), `teamID` (your Apple Developer Team ID), and the app’s bundle identifier and associated provisioning profile under `provisioningProfiles`. The `exportOptions.plist` file should be located in your iOS project’s directory, ideally within a designated `ios` folder.
+```txt
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+   <dict>
+       <key>method</key>
+       <string>app-store</string>   
+       <key>teamID</key> 
+       <string>YOUR-TEAM-ID</string>        
+       <key>provisioningProfiles</key>      
+       <dict>     
+          <key>com.example.bundleid</key>
+          <string>Github Actions</string> 
+       </dict>
+   </dict>
+</plist>
+```
+
+<br></br>
+<br></br>
 ## Deploy to Android via Google Play Store CD Workflow
 In this example we take a look at building an Android app, and deploying via Google Play Store. The `yaml` examples have a lot of comments, `echo` and `ls` commands in order to maintain readability, and for easy debugging.
 The examples below are for Kotlin and Java projects. If using Flutter or React Native, you will need to use some of the examples from the iOS examples.
@@ -345,76 +392,6 @@ runs-on: ubuntu-latest
         security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
         rm ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision
 ```
-## Setting up GitHub Secrets etc
-To build and deploy to App Stores you need certificates, key, files etc. 
-### Create exportOptions.plist
-### Secrets for iOS Deployment
-To build and deploy to iOS via Apple App Store, you need 7 github secrets.
-| GitHub Secret | Description | How To |
-| :------------ | :--------- | :----- |
-| `IOS_APPSTORE_CONNECT_API_KEY_ID` | This is the App Store Connect API Key ID, which is used to authenticate API requests to App Store Connect. It’s needed for uploading your `.ipa` file to App Store Connect. | 1. Log in to App Store Connect. Go to Users and Access > Integrations > App Store Connect API. 2. If you don’t have an API key yet, create one by clicking the `+` button. 3. Copy the Key ID provided – this is your `IOS_APPSTORE_CONNECT_API_KEY_ID`. |
-| `IOS_APPSTORE_CONNECT_ISSUER_ID` | The Issuer ID is a unique identifier for your App Store Connect organization, necessary for authenticating API requests along with the API Key ID. | x |
-| `IOS_APPSTORE_CONNECT_PRIVATE_KEY_BASE64` | App Store Connect API Private Key in Base64 format                                   | x |
-| `IOS_KEYCHAIN_PASSWORD` | This is a password for the temporary keychain                                        | x |
-| `IOS_P12_DISTRIBUTION_CERT_BASE64` | .p12 Distribution Certificate in Base64 format, used to sign app for distribution    | x |
-| `IOS_P12_DISTRIBUTION_CERT_PASSWORD` | The password used to access your .p12 distribution certificate                       | x |
-| `IOS_PROVISION_PROFILE_BASE64` | This is your iOS Provisioning Profile in Base64 format                               | x |
 
-
-**`IOS_APPSTORE_CONNECT_ISSUER_ID**
-1. In App Store Connect, go to Users and Access > Integrations > App Store Connect API. 2. The Issuer ID is listed in the API Keys section at the top.
-
-**`IOS_APPSTORE_CONNECT_PRIVATE_KEY_BASE64`**
-This is your App Store Connect API Private Key in Base64 format. It’s used with the Key ID and Issuer ID to securely authenticate uploads to App Store Connect.
-
-How to Find:
-1. When creating an API key in App Store Connect (as described above), download the `.p8` file – this file is your private key.
-2. Important: Do not share or expose this key publicly. Store it securely.
-3. To encode this key in Base64 (required for GitHub Actions):
-   - Run the following command in the terminal:
-     ```bash
-     base64 -i AuthKey_ABC123XYZ.p8 -o AuthKey_ABC123XYZ.p8.b64
-     ```
-   - Copy the Base64-encoded contents from `AuthKey_ABC123XYZ.p8.b64` and set it as the value for `IOS_APPSTORE_CONNECT_PRIVATE_KEY_BASE64`.
-
----
-
-**`IOS_KEYCHAIN_PASSWORD`**
-This is a password for the temporary keychain created in GitHub Actions to store your code-signing certificates and keys during the build process. This password can be any strong, random string and is used to secure the keychain on the runner.
-
-How to Set:
-- Generate a strong password manually or with a password generator.
-- Add this password directly as a GitHub secret.
-
-**`IOS_P12_DISTRIBUTION_CERT_BASE64`**
-This is your iOS Distribution Certificate in Base64 format, needed to sign the app for App Store distribution.
-
-How to Find:
-1. Open Keychain Access on your Mac.
-2. Locate your iOS Distribution Certificate (issued by Apple).
-3. Export the certificate and private key as a `.p12` file:
-   - Right-click the certificate and choose Export.
-   - Save it as a `.p12` file with a password (you’ll use this password for `IOS_P12_DISTRIBUTION_CERT_PASSWORD`).
-4. Convert the `.p12` file to Base64 for GitHub Actions:
-   ```bash
-   base64 -i YourCertificate.p12 -o YourCertificate.p12.b64
-   ```
-5. Copy the contents of `YourCertificate.p12.b64` and set it as `IOS_P12_DISTRIBUTION_CERT_BASE64`.
-
-**`IOS_P12_DISTRIBUTION_CERT_PASSWORD`**
-The password used when exporting your .p12 distribution certificate. This allows the certificate to be imported into the GitHub Actions keychain.
-How to Set:
-1. When you exported your certificate from Keychain Access, you created this password.
-2.Store this password directly as a GitHub secret.
-
-
-
-**`IOS_PROVISION_PROFILE_BASE64`**
-This is your iOS Provisioning Profile in Base64 format, which matches your app’s bundle identifier and distribution certificate for App Store distribution.
-How to Find:
-1. In Apple Developer Center, go to Profiles under Certificates, Identifiers & Profiles.
-2. Download the appropriate Provisioning Profile for App Store distribution (must match the app’s bundle ID).
-3. Convert the `.mobileprovision` file to Base64
-4. Copy the contents of `YourProvisioningProfile.mobileprovision.b64` and set it as `IOS_PROVISION_PROFILE_BASE64`.
-
-### Secrets for Android Deployment
+<br></br>
+### GitHub Secrets for Android Deployment
