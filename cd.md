@@ -1,6 +1,8 @@
 ## Mobile App Continuous Deployment to App Stores
 Continuous Deployment (CD) for mobile apps streamlines the process of building, testing, and deploying applications directly to app stores like the Apple App Store and Google Play Store. CD is valuable across all mobile development frameworks, including Swift, Flutter, Java, Kotlin, and React Native.
 
+**Note:** The example workflows provided may need changing to match your project, particularly file paths, and version numbers.
+
 - [Mobile App Continuous Deployment to App Stores](#mobile-app-continuous-deployment-to-app-stores)
   - [Benifits of CD for Mobile Apps](#benifits-of-cd-for-mobile-apps)
   - [General Steps of Mobile App Deployment](#general-steps-of-mobile-app-deployment)
@@ -26,7 +28,7 @@ If you are setting up the workflow for iOS distribution, you will need to use a 
 <br></br>
 <br></br>
 ## Deploy to iOS via Apple App Store CD Workflow
-In this example we take a look at building an iOS app, and deploying via Apple App Store. The `yaml` examples have a lot of comments, `echo` and `ls` commands in order to maintain readability, and for easy debugging.
+In this example we take a look at building an iOS app, and deploying via Apple App Store.
 
 To build and deploy an iOS app you need signing certificates, profiles, keychain passwords, API keys and an `exportOptions.plist` file.
 We use GitHub Secrets to store these confidential values securely. For more details on how to get, encode, and upload all of these, see [GitHub Secrets for iOS Deployment](#github-secrets-for-ios-deployment)
@@ -88,9 +90,6 @@ runs-on: macos-latest
     BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.iOS_PROVISION_PROFILE_BASE64 }}       
     KEYCHAIN_PASSWORD: ${{ secrets.iOS_KEYCHAIN_PASSWORD }}
   run: |   
-    echo "Certificate Base64 length: ${#BUILD_CERTIFICATE_BASE64}"
-    echo "Prov ision Profile Base64 length: ${#BUILD_PROVISION_PROFILE_BASE64}"
-
     # Set paths for certificate and profile files
     CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12                
     PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
@@ -100,19 +99,10 @@ runs-on: macos-latest
     echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
     echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
 
-    ls -l $CERTIFICATE_PATH
-    ls -l $PP_PATH
-    
-    file $CERTIFICATE_PATH
-    file $PP_PATH
-
     # Create and unlock a keychain to store the certificate
     security create-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN_PATH
     security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
     security unlock-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN_PATH
-
-    ls -l $KEYCHAIN_PATH
-    security show-keychain-info $KEYCHAIN_PATH
 
     # Import certificate into the keychain
     security import $CERTIFICATE_PATH -P $P12_PASSWORD -A -t cert -f pkcs12 -k $KEYCHAIN_PATH            
@@ -204,6 +194,8 @@ runs-on: macos-latest
 ```
 <br></br>
 ### GitHub Secrets for iOS Deployment
+GitHub secrets only supports strings, so we have to encode all of files to Base64, and then decode them in our workflow.
+
 | GitHub Secret | Description | How To |
 | :------------ | :---------- | :----- |
 | `IOS_APPSTORE_CONNECT_API_KEY_ID` | This is the App Store Connect API Key ID, which is used to authenticate API requests to App Store Connect. It’s needed for uploading your `.ipa` file to App Store Connect. | Log in to App Store Connect. Go to Users and Access > Integrations > App Store Connect API. If you don’t have an API key yet, create one by clicking the `+` button. Copy the Key ID provided – this is your `IOS_APPSTORE_CONNECT_API_KEY_ID`. |
@@ -239,7 +231,7 @@ The `exportOptions.plist` file is a configuration file used by Xcode during the 
 <br></br>
 <br></br>
 ## Deploy to Android via Google Play Store CD Workflow
-In this example we take a look at building an Android app, and deploying via Google Play Store. The `yaml` examples have a lot of comments, `echo` and `ls` commands in order to maintain readability, and for easy debugging.
+In this example we take a look at building an Android app, and deploying via Google Play Store.
 The examples below are for Kotlin and Java projects. If using Flutter or React Native, you will need to use some of the code from the iOS examples.
 
 To build and deploy an Android app, you need signing keys, JSON service account credentials, and environment variables. We use GitHub Secrets to securely store these confidential values. For more details on how to get, encode, and upload all of these, see [GitHub Secrets for Android Deployment](#github-secrets-for-android-deployment)
@@ -276,40 +268,31 @@ runs-on: ubuntu-latest
   run: ./gradlew build -x test 
 ```
 
-5. Load all required app signing keys and credentials to authorize the app build for the selected platform
+5. Load all required app signing keys and credentials to authorize the app build
 ```yaml
 - name: Setup Google Play credentials
-  env:
-    SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-  run: |
-    echo "$SERVICE_ACCOUNT_JSON" > $HOME/google_play_service_account.json
-    echo "Service account key setup complete"
-```
-6. Retrieve signing keys required to sign the APK/AAB for release
-```yaml
-- name: Setup Signing Key
+  # This env section fetches values from GitHub secrets and saves them to variables
   env:
     ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-    KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-    KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-    KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+    ANDROID_KEY_PROPERTIES_BASE64: ${{ secrets.ANDROID_KEY_PROPERTIES_BASE64 }}
+    PRODUCTION_CREDENTIAL_FILE_BASE64: ${{ secrets.PRODUCTION_CREDENTIAL_FILE_BASE64 }}
   run: |
-    # Decode and save the keystore file
-    echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > $HOME/release-key.jks
-    echo "Keystore setup complete"
+    echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > upload-keystore.jks
+    echo "${{ secrets.ANDROID_KEY_PROPERTIES_BASE64 }}" | base64 --decode > key.properties
+    echo "${{ secrets.PRODUCTION_CREDENTIAL_FILE_BASE64 }}" | base64 --decode > store_credentials.json
 ```
-7. Compile the app for the target platform
+6. Compile the app for the target platform
 ```yaml
 # FOR A KOTLIN OR JAVA APP
 - name: Build APK
   run: ./gradlew assembleRelease
 ```
-8. Upload the compiled build to Google Play using the Google Play Publisher API
+7. Upload the compiled build to Google Play using the Google Play Publisher API
 ```yaml
 - name: Upload to Google Play
   uses: r0adkll/upload-google-play@v1
   with:
-    serviceAccountJsonPath: $HOME/google_play_service_account.json
+    serviceAccountJsonPath: store_credentials.json
     # Replace the below with your apps bundle id
     packageName: com.example.bundleId
     releaseFile: app/build/outputs/apk/release/app-release.apk
@@ -322,18 +305,20 @@ runs-on: ubuntu-latest
 - name: Clean up keychain and provisioning profile
     if: ${{ always() }}
       run: |
-        rm -f $HOME/google_play_service_account.json
-        rm -f $HOME/release-key.jks
+        rm -f store_credentials.json
+        rm -f release-key.jks
+        rm -f key.properties
         echo "Clean up complete"
 ```
 
 <br></br>
 ### GitHub Secrets for Android Deployment
+Assuming you have built and deployed your app at least once manually, you will already have these 3 files. You just need to encode them as Base64. Note that your `key.properties` may need updating, depending on your project structure.
+
+GitHub secrets only supports strings, so we have to encode all of files to Base64, and then decode them in our workflow.
 | GitHub Secret |	Description	| How To |
 | ------------- | ----------- | ------ |
-| `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | This is the Google Play Service Account key in JSON format. It allows GitHub Actions to authenticate with Google Play for app upload. |	Go to Google Cloud Console, create a new service account, and grant it the "Release Manager" role for Google Play Console. Then, go to Keys for the service account and create a JSON key. Save the JSON key and encode it in Base64 if needed. Store this JSON file’s content as a GitHub Secret. |
+| `PRODUCTION_CREDENTIAL_FILE_BASE64` | This is the Google Play Service Account json encoded in Base64. It allows GitHub Actions to authenticate with Google Play for app upload. |	Go to Google Cloud Console, create a new service account, and grant it the "Release Manager" role for Google Play Console. Then, go to Keys for the service account and create a JSON key. Save the JSON key and encode it in Base64. |
 | `ANDROID_KEYSTORE_BASE64` |	This is the keystore file in Base64 format, used for signing the Android app for release. |	Convert your release-key.jks file to Base64. Copy the Base64-encoded contents and set it as `ANDROID_KEYSTORE_BASE64`. |
-| `ANDROID_KEYSTORE_PASSWORD` |	The password for the keystore file, which protects the private key within the keystore. |	This password was set when you created the keystore file. |
-| `ANDROID_KEY_ALIAS` |	The alias for the key within the keystore that will be used for signing. |	This alias was set when you created the keystore file. |
-| `ANDROID_KEY_PASSWORD` |	The password for the key alias, used to access the private key within the keystore. |	This password was set when you created the keystore file. |
+| `ANDROID_KEY_PROPERTIES_BASE64` |	This is your `key.properties` file encoded in Base64 format, it stores info need to sign your app for release. |	Carefully check all files paths, then encode your `key.properties` file as Base64. |
 
