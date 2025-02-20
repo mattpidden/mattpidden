@@ -15,7 +15,7 @@ jobs:
       - name: Fetch Streak Image
         run: |
           mkdir -p images
-          curl -o images/streak.svg "https://streak-stats.demolab.com?user=mattpidden&theme=transparent&hide_border=true&date_format=M%20j%5B%2C%20Y%5"
+          curl -o images/streak.svg "https://streak-stats.demolab.com/?user=mattpidden&hide_border=true&date_format=M%20j%5B%2C%20Y%5D&background=EB545400&currStreakNum=EB582C&currStreakLabel=EB5517&sideNums=38DC16&sideLabels=209712&dates=838383&stroke=C5C5C578"
           
       - name: Commit & Push
         run: |
