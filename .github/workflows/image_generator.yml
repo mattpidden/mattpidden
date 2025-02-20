@@ -8,14 +8,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: generate-github-profile-streak
+    name: streak
     steps:
       - uses: actions/checkout@v3
       
       - name: Fetch Streak Image
         run: |
           mkdir -p images
-          curl -o images/streak.png "https://streak-stats.demolab.com?user=mattpidden&theme=dark&hide_border=true&date_format=M%20j%5B%2C%20Y%5D&type=png"
+          curl -o images/streak.svg "https://streak-stats.demolab.com?user=mattpidden&theme=transparent&hide_border=true&date_format=M%20j%5B%2C%20Y%5"
           
       - name: Commit & Push
         run: |
