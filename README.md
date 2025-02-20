@@ -1,14 +1,4 @@
-<div style="position: relative; width: 100%; text-align: center;">
-    <!-- Confetti Images Positioned Absolutely -->
-    <img src="https://github.com/mattpidden/mattpidden/blob/main/images/orangegreencorfetti.gif?raw=true"
-         style="position: absolute; left: 5%; top: 0; width: 20%; height: auto; z-index: -1;">
-    <img src="https://github.com/mattpidden/mattpidden/blob/main/images/orangegreencorfetti.gif?raw=true"
-         style="position: absolute; right: 5%; top: 0; width: 20%; height: auto; z-index: -1;">
-</div>
-
 <p align="center">
-   <br>
-   <br>
    <img align="center" src="https://readme-typing-svg.herokuapp.com?font=Roboto+Condensed&weight=800&size=25&duration=2000&pause=5000&color=FF863F&background=46BE34&center=true&vCenter=true&random=false&width=435&lines=MATT+PIDDEN;%40mattpidden" width="40%" style="display:inline;">
 </p>
 
