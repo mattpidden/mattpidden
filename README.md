@@ -1,5 +1,5 @@
-<img align="left" src="https://github.com/mattpidden/mattpidden/blob/main/orangegreencorfetti.gif?raw=true" width="30%" style="display:inline;">
-<img align="right" src="https://github.com/mattpidden/mattpidden/blob/main/orangegreencorfetti.gif?raw=true" width="30%" style="display:inline;">
+<img align="left" src="https://github.com/mattpidden/mattpidden/blob/main/images/orangegreencorfetti.gif?raw=true" width="30%" style="display:inline;">
+<img align="right" src="https://github.com/mattpidden/mattpidden/blob/main/images/orangegreencorfetti.gif?raw=true" width="30%" style="display:inline;">
 
 <p align="center">
    <br>
@@ -13,5 +13,5 @@
 </p>
 
 <p align="center">
-    <a href="https://github.com/mattpidden"><img width="80%" src="https://github.com/mattpidden/mattpidden/blob/main/profile-3d-contrib/3d-contributions.svg"></a>
+    <a href="https://github.com/mattpidden"><img width="80%" src="https://github.com/mattpidden/mattpidden/blob/main/images/3d-contributions.svg"></a>
 </p>
