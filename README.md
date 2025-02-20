@@ -13,5 +13,6 @@
 </p>
 
 <p align="center">
-    <a href="https://github.com/mattpidden"><img width="80%" src="https://github.com/mattpidden/mattpidden/blob/main/images/3d-contributions.svg"></a>
+    <a href="https://github.com/mattpidden"><img width="40%" src="https://github-readme-stats.vercel.app/api/top-langs/?username=mattpidden&layout=compact&theme=gruvbox"></a>
 </p>
+<a href="https://git.io/streak-stats"><img src="https://nirzak-streak-stats.vercel.app/?user=mattpidden&border_radius=5&date_format=M%20j%5B%2C%20Y%5D&background=2E2E2E&currStreakNum=EB4717&currStreakLabel=EB4717&sideNums=38DC16&sideLabels=209712&dates=838383&stroke=C5C5C578&border=EBEBEB" alt="GitHub Streak" /></a>
