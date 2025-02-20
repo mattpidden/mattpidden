@@ -11,16 +11,31 @@ jobs:
     name: image_generator
     steps:
       - uses: actions/checkout@v3
-      
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          npm install puppeteer
+
       - name: Fetch Streak Image
         run: |
-          mkdir -p images
-          curl -o images/streak.svg https://streak-stats.demolab.com/?user=mattpidden&hide_border=true&date_format=M%20j%5B%2C%20Y%5D&background=EB545400&currStreakNum=EB582C&currStreakLabel=EB5517&sideNums=38DC16&sideLabels=209712&dates=838383&stroke=C5C5C578
-          
+          node -e "
+          const puppeteer = require('puppeteer');
+          (async () => {
+            const browser = await puppeteer.launch({ headless: true });
+            const page = await browser.newPage();
+            await page.goto('https://nirzak-streak-stats.vercel.app/?user=mattpidden&border_radius=5&date_format=M%20j%5B%2C%20Y%5D&background=2E2E2E&currStreakNum=EB4717&currStreakLabel=EB4717&sideNums=38DC16&sideLabels=209712&dates=838383&stroke=C5C5C578&border=EBEBEB', { waitUntil: 'networkidle2' });
+            await page.waitForTimeout(5000);  // Wait 5 seconds for animation to complete
+            await page.screenshot({ path: 'images/streak.png' });
+            await browser.close();
+          })();
+          "
+
       - name: Commit & Push
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add -A
-          git commit -m "generated images"
+          git commit -m "generated"
           git push
