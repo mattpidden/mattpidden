@@ -1,7 +1,7 @@
 <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' style='isolation: isolate' viewBox='0 0 495 195' width='495px' height='195px'>
         <style>
             a {
-                fill: #838383;
+                fill: #464646;
             }
         </style>
         <defs>
@@ -12,12 +12,12 @@
         </defs>
         <g clip-path='url(#outer_rectangle)'>
             <g style='isolation: isolate'>
-                <rect stroke='#000000' stroke-opacity='0' fill='#eb5454' fill-opacity='0' rx='4.5' x='0.5' y='0.5' width='494' height='194'/>
+                <rect stroke='#E4E2E2' fill='#FFFEFE' rx='4.5' x='0.5' y='0.5' width='494' height='194'/>
             </g>
             <g style='isolation: isolate'>
                 <!-- Error lable -->
                 <g transform='translate(247.5, 108)'>
-                    <text x='0' y='50' dy='0.25em' stroke-width='0' text-anchor='middle' fill='#209712' stroke='none' font-family='"Segoe UI", Ubuntu, sans-serif' font-weight='400' font-size='14px' font-style='normal'>
+                    <text x='0' y='50' dy='0.25em' stroke-width='0' text-anchor='middle' fill='#151515' stroke='none' font-family='"Segoe UI", Ubuntu, sans-serif' font-weight='400' font-size='14px' font-style='normal'>
                         Failed to retrieve contributions. This is likely a GitHub API issue.
                     </text>
                 </g>
